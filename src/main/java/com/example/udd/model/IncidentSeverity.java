@@ -1,6 +1,6 @@
 package com.example.udd.model;
 
-public enum LevelOfIncident {
+public enum IncidentSeverity {
     LOW,
     MEDIUM,
     HIGH,
