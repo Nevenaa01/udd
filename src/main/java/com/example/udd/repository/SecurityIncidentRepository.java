@@ -5,5 +5,5 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SecurityIncidentRepository extends ElasticsearchRepository<SecurityIncident, Integer> {
+public interface SecurityIncidentRepository extends ElasticsearchRepository<SecurityIncident, String> {
 }

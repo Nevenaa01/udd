@@ -14,12 +14,21 @@ public class SecurityIncidentService {
     @Autowired
     private SecurityIncidentRepository securityIncidentRepository;
 
-    public List<SecurityIncident> getAll() {
-        Page<SecurityIncident> page = securityIncidentRepository.findAll(PageRequest.of(0, 10));
-        return page.getContent();
+    public Iterable<SecurityIncident> getAll() {
+        /*Page<SecurityIncident> page = securityIncidentRepository.findAll(PageRequest.of(0, 10));
+        return page.getContent();*/
+        return securityIncidentRepository.findAll();
     }
 
     public SecurityIncident create(SecurityIncident securityIncident){
         return securityIncidentRepository.save(securityIncident);
+    }
+
+    public SecurityIncident update(SecurityIncident securityIncident){
+        return securityIncidentRepository.save(securityIncident);
+    }
+
+    public void deleteById(String id){
+        securityIncidentRepository.deleteById(id);
     }
 }

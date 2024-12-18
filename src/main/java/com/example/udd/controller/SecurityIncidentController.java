@@ -15,12 +15,22 @@ public class SecurityIncidentController {
     private SecurityIncidentService securityIncidentService;
 
     @GetMapping("/all")
-    public List<SecurityIncident> getAll(){
+    public Iterable<SecurityIncident> getAll(){
         return securityIncidentService.getAll();
     }
 
-    @PostMapping("/create")
+    @PostMapping()
     public SecurityIncident create(@RequestBody SecurityIncident securityIncident){
         return securityIncidentService.create(securityIncident);
+    }
+
+    @PutMapping()
+    public SecurityIncident update(@RequestBody SecurityIncident securityIncident){
+        return securityIncidentService.update(securityIncident);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteById(@PathVariable  String id){
+        securityIncidentService.deleteById(id);
     }
 }
