@@ -1,0 +1,14 @@
+{
+  "analysis": {
+    "analyzer": {
+      "serbian_simple": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase",
+          "stop"
+        ]
+      }
+    }
+  }
+}

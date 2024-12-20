@@ -1,0 +1,107 @@
+package com.example.udd.modelIndex;
+
+import com.example.udd.model.IncidentSeverity;
+import jakarta.persistence.Id;
+import lombok.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Setting;
+
+@Document(indexName = "security_incident_index")
+@Setting(settingPath = "/configuration/analyzerConfig.json")
+public class SecurityIncidentIndex {
+    @Id
+    private String id;
+
+    @Field(type = FieldType.Text, store = true, name = "full_name")
+    private String fullName;
+    @Field(type = FieldType.Text, store = true, name = "security_organization_name")
+    private String securityOrganizationName;
+    @Field(type = FieldType.Text, store = true, name = "attacked_organization_name")
+    private String attackedOrganizationName;
+    @Field(type = FieldType.Text, store = true, name = "incident_severity")
+    private IncidentSeverity incidentSeverity;
+    @Field(type = FieldType.Integer, store = true, name = "database_id")
+    private Integer databaseId;
+    @Field(type = FieldType.Dense_Vector, store = false, dims = 384, similarity = "cosine")
+    private float vectorizedContent;
+
+    public SecurityIncidentIndex() {
+    }
+
+    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId) {
+        this.id = id;
+        this.fullName = fullName;
+        this.securityOrganizationName = securityOrganizationName;
+        this.attackedOrganizationName = attackedOrganizationName;
+        this.incidentSeverity = incidentSeverity;
+        this.databaseId = databaseId;
+    }
+
+    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, float vectorizedContent) {
+        this.id = id;
+        this.fullName = fullName;
+        this.securityOrganizationName = securityOrganizationName;
+        this.attackedOrganizationName = attackedOrganizationName;
+        this.incidentSeverity = incidentSeverity;
+        this.databaseId = databaseId;
+        this.vectorizedContent = vectorizedContent;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getSecurityOrganizationName() {
+        return securityOrganizationName;
+    }
+
+    public void setSecurityOrganizationName(String securityOrganizationName) {
+        this.securityOrganizationName = securityOrganizationName;
+    }
+
+    public String getAttackedOrganizationName() {
+        return attackedOrganizationName;
+    }
+
+    public void setAttackedOrganizationName(String attackedOrganizationName) {
+        this.attackedOrganizationName = attackedOrganizationName;
+    }
+
+    public IncidentSeverity getIncidentSeverity() {
+        return incidentSeverity;
+    }
+
+    public void setIncidentSeverity(IncidentSeverity incidentSeverity) {
+        this.incidentSeverity = incidentSeverity;
+    }
+
+    public Integer getDatabaseId() {
+        return databaseId;
+    }
+
+    public void setDatabaseId(Integer databaseId) {
+        this.databaseId = databaseId;
+    }
+
+    public float getVectorizedContent() {
+        return vectorizedContent;
+    }
+
+    public void setVectorizedContent(float vectorizedContent) {
+        this.vectorizedContent = vectorizedContent;
+    }
+}

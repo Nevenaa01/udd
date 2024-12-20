@@ -1,14 +1,22 @@
 package com.example.udd.model;
 
-import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import jakarta.persistence.Id;
 
-@Data
-@Document(indexName = "security_incident_index")
+@Entity
+@Table(name = "securityIncident")
 public class SecurityIncident {
-    private String id;
-    private String firstName;
-    private String lastName;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String fullName;
     private String securityOrganizationName;
     private String attackedOrganizationName;
     private IncidentSeverity incidentSeverity;
@@ -17,38 +25,29 @@ public class SecurityIncident {
     public SecurityIncident() {
     }
 
-    public SecurityIncident(String id, String firstName, String lastName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String address) {
+    public SecurityIncident(Long id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String address) {
         this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
         this.incidentSeverity = incidentSeverity;
         this.address = address;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getSecurityOrganizationName() {

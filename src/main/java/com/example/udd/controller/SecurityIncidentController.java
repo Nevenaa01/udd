@@ -1,11 +1,10 @@
 package com.example.udd.controller;
 
-import com.example.udd.model.SecurityIncident;
+import com.example.udd.dto.SecurityIncidentDto;
+import com.example.udd.modelIndex.SecurityIncidentIndex;
 import com.example.udd.service.SecurityIncidentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -15,22 +14,22 @@ public class SecurityIncidentController {
     private SecurityIncidentService securityIncidentService;
 
     @GetMapping("/all")
-    public Iterable<SecurityIncident> getAll(){
+    public Iterable<SecurityIncidentIndex> getAll() {
         return securityIncidentService.getAll();
     }
 
     @PostMapping()
-    public SecurityIncident create(@RequestBody SecurityIncident securityIncident){
+    public SecurityIncidentIndex create(@RequestBody SecurityIncidentDto securityIncident) {
         return securityIncidentService.create(securityIncident);
     }
 
     @PutMapping()
-    public SecurityIncident update(@RequestBody SecurityIncident securityIncident){
+    public SecurityIncidentIndex update(@RequestBody SecurityIncidentDto securityIncident) {
         return securityIncidentService.update(securityIncident);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteById(@PathVariable  String id){
+    public void deleteById(@PathVariable String id) {
         securityIncidentService.deleteById(id);
     }
 }

@@ -1,34 +1,47 @@
 package com.example.udd.service;
 
-import com.example.udd.model.SecurityIncident;
-import com.example.udd.repository.SecurityIncidentRepository;
+import com.example.udd.dto.SecurityIncidentDto;
+import com.example.udd.modelIndex.SecurityIncidentIndex;
+import com.example.udd.repositoryIndex.SecurityIncidentIndexRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class SecurityIncidentService {
     @Autowired
-    private SecurityIncidentRepository securityIncidentRepository;
+    private SecurityIncidentIndexRepository securityIncidentIndexRepository;
 
-    public Iterable<SecurityIncident> getAll() {
+    public Iterable<SecurityIncidentIndex> getAll() {
         /*Page<SecurityIncident> page = securityIncidentRepository.findAll(PageRequest.of(0, 10));
         return page.getContent();*/
-        return securityIncidentRepository.findAll();
+        return securityIncidentIndexRepository.findAll();
     }
 
-    public SecurityIncident create(SecurityIncident securityIncident){
-        return securityIncidentRepository.save(securityIncident);
+    public SecurityIncidentIndex create(SecurityIncidentDto securityIncident) {
+        SecurityIncidentIndex securityIncidentIndex = new SecurityIncidentIndex(securityIncident.id.toString(),
+                securityIncident.fullName,
+                securityIncident.securityOrganizationName,
+                securityIncident.attackedOrganizationName,
+                securityIncident.incidentSeverity,
+                0,
+                0);
+
+        return securityIncidentIndexRepository.save(securityIncidentIndex);
     }
 
-    public SecurityIncident update(SecurityIncident securityIncident){
-        return securityIncidentRepository.save(securityIncident);
+    public SecurityIncidentIndex update(SecurityIncidentDto securityIncident) {
+        SecurityIncidentIndex securityIncidentIndex = new SecurityIncidentIndex(securityIncident.id.toString(),
+                securityIncident.fullName,
+                securityIncident.securityOrganizationName,
+                securityIncident.attackedOrganizationName,
+                securityIncident.incidentSeverity,
+                0,
+                0);
+
+        return securityIncidentIndexRepository.save(securityIncidentIndex);
     }
 
-    public void deleteById(String id){
-        securityIncidentRepository.deleteById(id);
+    public void deleteById(String id) {
+        securityIncidentIndexRepository.deleteById(id);
     }
 }
