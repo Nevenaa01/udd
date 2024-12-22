@@ -24,7 +24,7 @@ public class SecurityIncidentService {
                 securityIncident.attackedOrganizationName,
                 securityIncident.incidentSeverity,
                 0,
-                0);
+                null);
 
         return securityIncidentIndexRepository.save(securityIncidentIndex);
     }
@@ -36,7 +36,7 @@ public class SecurityIncidentService {
                 securityIncident.attackedOrganizationName,
                 securityIncident.incidentSeverity,
                 0,
-                0);
+                null);
 
         return securityIncidentIndexRepository.save(securityIncidentIndex);
     }
