@@ -27,11 +27,12 @@ public class SecurityIncidentIndex {
     private Integer databaseId;
     @Field(store = true, name = "location")
     private GeoPoint location;
+    @Field(type = FieldType.Dense_Vector, dims = 384, similarity = "cosine")
+    private float[] vectorizedContent;
 
-    public SecurityIncidentIndex() {
-    }
+    public SecurityIncidentIndex() { }
 
-    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, GeoPoint location) {
+    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, GeoPoint location, float[] vectorizedContent) {
         this.id = id;
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
@@ -39,6 +40,7 @@ public class SecurityIncidentIndex {
         this.incidentSeverity = incidentSeverity;
         this.databaseId = databaseId;
         this.location = location;
+        this.vectorizedContent = vectorizedContent;
     }
 
     public String getId() {
@@ -95,5 +97,13 @@ public class SecurityIncidentIndex {
 
     public void setLocation(GeoPoint location) {
         this.location = location;
+    }
+
+    public float[] getVectorizedContent() {
+        return vectorizedContent;
+    }
+
+    public void setVectorizedContent(float[] vectorizedContent) {
+        this.vectorizedContent = vectorizedContent;
     }
 }
