@@ -1,27 +1,27 @@
-version: '3.6'
+version: '3.7'
 
 services:
   Elasticsearch:
-    image: elasticsearch:7.17.9
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
     container_name: elasticsearch
     restart: always
     volumes:
       - elastic_data:/usr/share/elasticsearch/data
     environment:
-      #set memory usage
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-      discovery.type: single-node
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
     ports:
       - '9200:9200'
-      - '9300:9300'
     networks:
       - elk
 
   Logstash:
-    image: logstash:7.17.9
+    image: docker.elastic.co/logstash/logstash:8.15.2
     container_name: logstash
     restart: always
     volumes:
+      - ./logstash-ingest-data/:/usr/share/logstash/ingest_data/
       - ./logstash/:/logstash_dir
     #conf of logstash that needs to be done when logstash is starting
     #its about pipeline content
@@ -38,7 +38,7 @@ services:
       - elk
 
   Kibana:
-    image: kibana:7.17.9
+    image: docker.elastic.co/kibana/kibana:8.15.2
     container_name: kibana
     restart: always
     ports:
@@ -51,7 +51,7 @@ services:
       - elk
 
   MinIO:
-    image: minio/minio:RELEASE.2024-07-15T19-02-30Z
+    image: quay.io/minio/minio:latest
     container_name: minio
     restart: always
     ports:

@@ -28,10 +28,9 @@ public class UddApplication {
     private static MinioClient demo() {
         MinioClient minioClient = MinioClient.builder()
                 .endpoint("http://localhost:9000")
-                .credentials("SVDdqWLflOqzWpVRqT2T", "lKzjUJ2VYYfUFx86YuP8rJLl6PcrnTWyLsxRF971")
+                .credentials("x3FTNltxbbOrxKcIkrWO", "qnB6aJlejdCIIrxB7LqUp6KW4vuHhzx7MglMhG8s")
                 .build();
 
         return minioClient;
     }
-
 }
