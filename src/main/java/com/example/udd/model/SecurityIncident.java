@@ -20,18 +20,18 @@ public class SecurityIncident {
     private String securityOrganizationName;
     private String attackedOrganizationName;
     private IncidentSeverity incidentSeverity;
-    private String address;
+    private String location;
 
     public SecurityIncident() {
     }
 
-    public SecurityIncident(Long id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String address) {
+    public SecurityIncident(Long id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String location) {
         this.id = id;
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
         this.incidentSeverity = incidentSeverity;
-        this.address = address;
+        this.location = location;
     }
 
     public Long getId() {
@@ -74,11 +74,11 @@ public class SecurityIncident {
         this.incidentSeverity = incidentSeverity;
     }
 
-    public String getAddress() {
-        return address;
+    public String getLocation() {
+        return location;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setLocation(String location) {
+        this.location = location;
     }
 }
