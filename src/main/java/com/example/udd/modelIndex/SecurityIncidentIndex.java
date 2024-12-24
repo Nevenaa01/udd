@@ -30,7 +30,8 @@ public class SecurityIncidentIndex {
     @Field(type = FieldType.Dense_Vector, dims = 384, similarity = "cosine")
     private float[] vectorizedContent;
 
-    public SecurityIncidentIndex() { }
+    public SecurityIncidentIndex() {
+    }
 
     public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, GeoPoint location, float[] vectorizedContent) {
         this.id = id;
