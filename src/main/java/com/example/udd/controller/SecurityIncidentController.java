@@ -3,6 +3,7 @@ package com.example.udd.controller;
 import com.example.udd.dto.SecurityIncidentDto;
 import com.example.udd.modelIndex.SecurityIncidentIndex;
 import com.example.udd.service.SecurityIncidentService;
+import com.example.udd.utils.PDFExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.io.IOException;
 public class SecurityIncidentController {
     @Autowired
     private SecurityIncidentService securityIncidentService;
+    private final PDFExtractor pdfExtractor = PDFExtractor.getInstance();
 
     @GetMapping("/all")
     public Iterable<SecurityIncidentIndex> getAll() {
@@ -43,14 +45,10 @@ public class SecurityIncidentController {
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> uploadPDF(@RequestParam("pdf") MultipartFile file){
         try {
-            // Example: Save file, parse it, or log metadata
-            String originalName = file.getOriginalFilename();
-            byte[] content = file.getBytes();
+            pdfExtractor.importPDF(file);
 
-            // Do something with the file...
-
-            return ResponseEntity.ok().body("File uploaded: " + originalName);
-        } catch (IOException e) {
+            return ResponseEntity.ok().body("File uploaded: " + file.getOriginalFilename());
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
         }
     }

@@ -31,5 +31,6 @@ replay_pid*
 
 .minio.sys/
 minio_storage/.minio.sys/
+pdfs/
 
 
