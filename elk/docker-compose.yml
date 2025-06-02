@@ -19,7 +19,7 @@ services:
     container_name: logstash
     restart: always
     volumes:
-      - ./logstash-ingest-data/:/usr/share/logstash/ingest_data/
+      - ./logstash/logstash-ingest-data/:/usr/share/logstash/ingest_data
       - ./logstash/:/logstash_dir
     #conf of logstash that needs to be done when logstash is starting
     #its about pipeline content

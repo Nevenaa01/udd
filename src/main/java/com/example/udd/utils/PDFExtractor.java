@@ -43,13 +43,15 @@ public final class PDFExtractor {
     }
 
     // Tries to open and extract file specified by the filepath
-    public void importPDF(MultipartFile file) throws FileNotFoundException{
+    public String importPDF(MultipartFile file) throws FileNotFoundException{
         try{
             String filePath = savePDFFileLocally(file);
             inputStream = new FileInputStream(new File(filePath));
 
             pdfParser.parse(inputStream, handler, metaData, parseContext);
             System.out.println(getDocumentText());
+
+            return getDocumentText();
         } catch (IOException e){
             e.printStackTrace();
         } catch (SAXException e){
@@ -57,6 +59,8 @@ public final class PDFExtractor {
         } catch (TikaException e){
             e.printStackTrace();
         }
+
+        return "";
     }
 
     public String savePDFFileLocally(MultipartFile file) throws IOException{
@@ -71,6 +75,10 @@ public final class PDFExtractor {
 
     public String getDocumentText(){
         return handler.toString();
+    }
+
+    public void clearHandler(){
+        handler = new BodyContentHandler(-1);
     }
 
     public Map<String, String> getMetadata(){

@@ -12,7 +12,7 @@ import java.util.List;
 public class UddApplication {
 
     public static void main(String[] args) {
-        MinioClient minioClient = demo();
+        /*MinioClient minioClient = demo();
         try {
             List<Bucket> buckets = minioClient.listBuckets();
             System.out.println("Connection success, total buckets: " + buckets.size());
@@ -20,17 +20,17 @@ public class UddApplication {
             System.out.println("Connection failed: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
         SpringApplication.run(UddApplication.class, args);
     }
 
-    private static MinioClient demo() {
+    /*private static MinioClient demo() {
         MinioClient minioClient = MinioClient.builder()
                 .endpoint("http://localhost:9000")
                 .credentials("x3FTNltxbbOrxKcIkrWO", "qnB6aJlejdCIIrxB7LqUp6KW4vuHhzx7MglMhG8s")
                 .build();
 
         return minioClient;
-    }
+    }*/
 }

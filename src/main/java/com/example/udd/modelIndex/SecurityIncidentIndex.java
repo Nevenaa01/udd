@@ -44,6 +44,16 @@ public class SecurityIncidentIndex {
         this.vectorizedContent = vectorizedContent;
     }
 
+    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, GeoPoint location, float[] vectorizedContent) {
+        this.fullName = fullName;
+        this.securityOrganizationName = securityOrganizationName;
+        this.attackedOrganizationName = attackedOrganizationName;
+        this.incidentSeverity = incidentSeverity;
+        this.databaseId = databaseId;
+        this.location = location;
+        this.vectorizedContent = vectorizedContent;
+    }
+
     public String getId() {
         return id;
     }

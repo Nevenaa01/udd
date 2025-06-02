@@ -16,6 +16,7 @@ public class SecurityIncident {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String fileName;
     private String fullName;
     private String securityOrganizationName;
     private String attackedOrganizationName;
@@ -25,8 +26,18 @@ public class SecurityIncident {
     public SecurityIncident() {
     }
 
-    public SecurityIncident(Long id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String location) {
+    public SecurityIncident(Long id, String fileName, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String location) {
         this.id = id;
+        this.fileName = fileName;
+        this.fullName = fullName;
+        this.securityOrganizationName = securityOrganizationName;
+        this.attackedOrganizationName = attackedOrganizationName;
+        this.incidentSeverity = incidentSeverity;
+        this.location = location;
+    }
+
+    public SecurityIncident(String fileName, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String location) {
+        this.fileName = fileName;
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
@@ -40,6 +51,14 @@ public class SecurityIncident {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public String getFullName() {
