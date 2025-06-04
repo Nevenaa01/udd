@@ -7,6 +7,10 @@ import com.example.udd.modelIndex.SecurityIncidentIndex;
 import com.example.udd.repository.SecurityIncidentRepository;
 import com.example.udd.repositoryIndex.SecurityIncidentIndexRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.print.attribute.standard.Severity;
@@ -18,6 +22,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Service
 public class SecurityIncidentService {
@@ -25,6 +33,13 @@ public class SecurityIncidentService {
     private SecurityIncidentIndexRepository securityIncidentIndexRepository;
     @Autowired
     private SecurityIncidentRepository securityIncidentRepository;
+
+    private final ElasticsearchOperations elasticsearchOperations;
+
+    @Autowired
+    public SecurityIncidentService(ElasticsearchOperations elasticsearchOperations) {
+        this.elasticsearchOperations = elasticsearchOperations;
+    }
 
     public Iterable<SecurityIncidentIndex> getAll() {
         /*Page<SecurityIncident> page = securityIncidentRepository.findAll(PageRequest.of(0, 10));
@@ -64,7 +79,7 @@ public class SecurityIncidentService {
         };
     }
 
-    public SecurityIncident createDB(SecurityIncidentDto securityIncidentDto){
+    public SecurityIncident create(SecurityIncidentDto securityIncidentDto){
         SecurityIncident securityIncident = new SecurityIncident(securityIncidentDto.fileName,
                 securityIncidentDto.fullName,
                 securityIncidentDto.securityOrganizationName,
@@ -82,16 +97,14 @@ public class SecurityIncidentService {
 
     private void logToFile(SecurityIncident securityIncident){
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        String timestamp = LocalDateTime.now().format(formatter);
 
-        String logMessage = String.format("%s INFO Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %s, id in database: %s",
-                timestamp,
+        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: 45.2671,19.8335, id in database: %d",
                 securityIncident.getAttackedOrganizationName(),
                 securityIncident.getSecurityOrganizationName(),
                 securityIncident.getFullName(),
                 securityIncident.getIncidentSeverity(),
-                securityIncident.getLocation(),
-                securityIncident.getId().toString());
+                //securityIncident.getLocation(),
+                securityIncident.getId());
 
         try {
             String projectRoot = System.getProperty("user.dir");
@@ -108,32 +121,29 @@ public class SecurityIncidentService {
         }
     }
 
-    public SecurityIncidentIndex create(SecurityIncident securityIncident) {
-        SecurityIncidentIndex securityIncidentIndex = new SecurityIncidentIndex(securityIncident.getFullName(),
-                securityIncident.getSecurityOrganizationName(),
-                securityIncident.getAttackedOrganizationName(),
-                securityIncident.getIncidentSeverity(),
-                Math.toIntExact(securityIncident.getId()),
-                null,
-                null);
+    public List<SecurityIncidentIndex> search(String input, String tpyeOfSearch){
+        Criteria criteria;
 
-        return securityIncidentIndexRepository.save(securityIncidentIndex);
-    }
+        switch (tpyeOfSearch){
+            case "fullNameAndSeverity":
+                criteria = new Criteria("full_name").contains(input.toLowerCase())
+                        .or(new Criteria("incident_severity").contains(input.toUpperCase()));
 
-    public SecurityIncidentIndex update(SecurityIncidentDto securityIncident) {
-        SecurityIncidentIndex securityIncidentIndex = new SecurityIncidentIndex(securityIncident.id.toString(),
-                securityIncident.fullName,
-                securityIncident.securityOrganizationName,
-                securityIncident.attackedOrganizationName,
-                securityIncident.incidentSeverity,
-                0,
-                null,
-                null);
+                break;
+            case "organizationsName":
+                criteria = new Criteria("security_organization_name").contains(input.toLowerCase())
+                        .or(new Criteria("attacked_organization_name").contains(input.toLowerCase()));
+                break;
 
-        return securityIncidentIndexRepository.save(securityIncidentIndex);
-    }
+            default:
+                return null;
+        }
 
-    public void deleteById(String id) {
-        securityIncidentIndexRepository.deleteById(id);
+        Query query = new CriteriaQuery(criteria);
+        return elasticsearchOperations
+                .search(query, SecurityIncidentIndex.class)
+                .stream()
+                .map(hit -> hit.getContent())
+                .collect(Collectors.toList());
     }
 }

@@ -21,7 +21,7 @@ public class SecurityIncidentIndex {
     private String securityOrganizationName;
     @Field(type = FieldType.Text, store = true, name = "attacked_organization_name")
     private String attackedOrganizationName;
-    @Field(type = FieldType.Text, store = true, name = "incident_severity")
+    @Field(type = FieldType.Keyword, store = true, name = "incident_severity")
     private IncidentSeverity incidentSeverity;
     @Field(type = FieldType.Integer, store = true, name = "database_id")
     private Integer databaseId;

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -34,21 +36,11 @@ public class SecurityIncidentController {
     @PostMapping()
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> create(@RequestBody SecurityIncidentDto securityIncident) {
-        SecurityIncident savedSecurityIncident = securityIncidentService.createDB(securityIncident);
+        SecurityIncident savedSecurityIncident = securityIncidentService.create(securityIncident);
         //SecurityIncidentIndex savedSecurityIncidentIndex = securityIncidentService.create(savedSecurityIncident);
         return  savedSecurityIncident != null ?
                 ResponseEntity.ok("Index created successfully") :
                 ResponseEntity.internalServerError().body("Error saving security incident");
-    }
-
-    @PutMapping()
-    public SecurityIncidentIndex update(@RequestBody SecurityIncidentDto securityIncident) {
-        return securityIncidentService.update(securityIncident);
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteById(@PathVariable String id) {
-        securityIncidentService.deleteById(id);
     }
 
     @PostMapping("/uploadPDF")
@@ -67,6 +59,18 @@ public class SecurityIncidentController {
             return ResponseEntity.ok().body(securityIncidentDto);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
+        }
+    }
+
+    @GetMapping("/search/{input}/{searchType}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<?> search(@PathVariable String input, @PathVariable String searchType){
+        List<SecurityIncidentIndex> securityIncidentIndices = securityIncidentService.search(input, searchType);
+
+        if(securityIncidentIndices != null){
+            return ResponseEntity.ok(securityIncidentIndices);
+        } else {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
