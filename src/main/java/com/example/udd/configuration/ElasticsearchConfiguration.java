@@ -10,7 +10,10 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 public class ElasticsearchConfiguration extends org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration {
     @Override
     public ClientConfiguration clientConfiguration() {
-        return ClientConfiguration.builder().connectedTo("localhost:9200")
-                .withBasicAuth("", "").build();
+        return ClientConfiguration.builder()
+                .connectedTo("localhost:9200")
+                .withBasicAuth("elastic", "sifraElastic123")
+                .withSocketTimeout(java.time.Duration.ofSeconds(30))
+                .build();
     }
 }

@@ -1,6 +1,6 @@
 services:
   Elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.0
     container_name: elasticsearch
     restart: always
     volumes:
@@ -8,14 +8,20 @@ services:
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
+      - node.roles=master,data,ingest,ml
     ports:
       - '9200:9200'
     networks:
       - elk
+#    command:
+#      - bash
+#      - -c
+#      - |
+#        elasticsearch-plugin install analysis-icu --batch && elasticsearch
 
   Logstash:
-    image: docker.elastic.co/logstash/logstash:8.15.2
+    image: docker.elastic.co/logstash/logstash:8.18.0
     container_name: logstash
     restart: always
     volumes:
@@ -36,17 +42,20 @@ services:
       - elk
 
   Kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.2
+    image: docker.elastic.co/kibana/kibana:8.18.0
     container_name: kibana
     restart: always
     ports:
       - '5601:5601'
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=sifraElastic123
     depends_on:
       - Elasticsearch
     networks:
       - elk
+
 
   MinIO:
     image: quay.io/minio/minio:latest
