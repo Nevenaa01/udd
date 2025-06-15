@@ -22,18 +22,18 @@ public class SecurityIncidentIndex {
     @Field(type = FieldType.Text, store = true, name = "attacked_organization_name")
     private String attackedOrganizationName;
     @Field(type = FieldType.Keyword, store = true, name = "incident_severity")
-    private IncidentSeverity incidentSeverity;
+    private String incidentSeverity;
     @Field(type = FieldType.Integer, store = true, name = "database_id")
     private Integer databaseId;
     @Field(store = true, name = "location")
     private GeoPoint location;
-    @Field(type = FieldType.Dense_Vector, dims = 384, similarity = "cosine")
-    private float[] vectorizedContent;
+    @Field(type = FieldType.Object)
+    private VectorizedContent vectorizedContent;
 
     public SecurityIncidentIndex() {
     }
 
-    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, GeoPoint location, float[] vectorizedContent) {
+    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, GeoPoint location, VectorizedContent vectorizedContent) {
         this.id = id;
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
@@ -44,7 +44,7 @@ public class SecurityIncidentIndex {
         this.vectorizedContent = vectorizedContent;
     }
 
-    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, Integer databaseId, GeoPoint location, float[] vectorizedContent) {
+    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, GeoPoint location, VectorizedContent vectorizedContent) {
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
@@ -86,11 +86,11 @@ public class SecurityIncidentIndex {
         this.attackedOrganizationName = attackedOrganizationName;
     }
 
-    public IncidentSeverity getIncidentSeverity() {
+    public String getIncidentSeverity() {
         return incidentSeverity;
     }
 
-    public void setIncidentSeverity(IncidentSeverity incidentSeverity) {
+    public void setIncidentSeverity(String incidentSeverity) {
         this.incidentSeverity = incidentSeverity;
     }
 
@@ -110,11 +110,11 @@ public class SecurityIncidentIndex {
         this.location = location;
     }
 
-    public float[] getVectorizedContent() {
+    public VectorizedContent getVectorizedContent() {
         return vectorizedContent;
     }
 
-    public void setVectorizedContent(float[] vectorizedContent) {
+    public void setVectorizedContent(VectorizedContent vectorizedContent) {
         this.vectorizedContent = vectorizedContent;
     }
 }

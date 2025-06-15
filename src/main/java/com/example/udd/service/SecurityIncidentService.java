@@ -98,11 +98,13 @@ public class SecurityIncidentService {
     private void logToFile(SecurityIncident securityIncident){
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: 45.2671,19.8335, id in database: %d",
+        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %f,%f, id in database: %d",
                 securityIncident.getAttackedOrganizationName(),
                 securityIncident.getSecurityOrganizationName(),
                 securityIncident.getFullName(),
-                securityIncident.getIncidentSeverity(),
+                securityIncident.getIncidentSeverity().toString(),
+                45.2671,
+                19.8335,
                 //securityIncident.getLocation(),
                 securityIncident.getId());
 
