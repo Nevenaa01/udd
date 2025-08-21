@@ -2,18 +2,29 @@ package com.example.udd.service;
 
 import ai.djl.translate.TranslateException;
 import co.elastic.clients.elasticsearch._types.KnnQuery;
+import co.elastic.clients.elasticsearch._types.KnnSearch;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.KnnQuery;
 
 import com.example.udd.modelIndex.SecurityIncidentIndex;
+import com.example.udd.modelIndex.VectorizedContent;
 import com.example.udd.service.interfaces.ISearchService;
 import com.example.udd.utils.TextVectorization;
 import com.example.udd.utils.VectorizationUtil;
 import joptsimple.internal.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.util.EntityUtils;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.common.unit.Fuzziness;
+import org.nd4j.shade.jackson.databind.JsonNode;
+import org.nd4j.shade.jackson.databind.ObjectMapper;
+import org.nd4j.shade.jackson.databind.ObjectWriter;
+import org.nd4j.shade.jackson.databind.SerializationFeature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -21,12 +32,12 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +45,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SearchService implements ISearchService {
     private final ElasticsearchOperations elasticsearchOperations;
+    @Autowired
+    private RestClient restClient;
 
     public SearchService(ElasticsearchOperations elasticsearchOperations){
         this.elasticsearchOperations = elasticsearchOperations;
@@ -49,22 +62,18 @@ public class SearchService implements ISearchService {
                         "text_field",
                         Strings.join(keywords, " ")
                 );
-                System.out.println("Vector: " + vector1);
+                System.out.println("Vector1: " + vector1);
 
                 var vector = VectorizationUtil.getEmbedding(Strings.join(keywords, " "));
 
-                double norm = 0;
-                for (float v : vector) norm += v * v;
-                norm = Math.sqrt(norm);
-                System.out.println("Vector norm: " + norm);
-
-                return knnSearch(new float[]{0.0283f, 0.0418f, -0.027f, -0.0485f, 0.0569f, 0.0425f, -0.0499f, 0.0023f, -0.0304f, 0.0277f, -0.055f, -0.0162f, 0.0057f, -0.0531f, 0.0008f, 0.0077f, 0.0012f, 0.0105f, -0.0047f, 0.0025f, -0.0026f, -0.041f, 0.0194f, 0.0158f, 0.0404f, -0.0111f, 0.0063f, 0.0233f, 0.0306f, -0.0395f, 0.0507f, 0.0302f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
-                });
+                return knnSearch(vector);
             } catch (TranslateException e) {
                 System.out.println(e.getMessage());
                 return null;
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            }catch (Exception e){
+                e.printStackTrace();
             }
         }
 
@@ -111,40 +120,91 @@ public class SearchService implements ISearchService {
         return resultPage.getContent();
     }
 
-    private List<SecurityIncidentIndex> knnSearch(float[] queryVector){
-        /*Float[] floatObjects = new Float[queryVector.length];
+    private List<SecurityIncidentIndex> knnSearch(float[] vectors) throws Exception {
+        String endpoint = "/security_incident_index/_search";
 
-        for(int i = 0; i < queryVector.length; i++){
-            floatObjects[i] = queryVector[i];
+        Map<String, Object> knnQuery = new HashMap<>();
+        knnQuery.put("field", "vectorizedContent.predicted_value");
+        knnQuery.put("k", 10);
+        knnQuery.put("num_candidates", 10);
+
+        List<Double> vectorValues = new ArrayList<>();
+        for (var vector : vectors) {
+            vectorValues.add((double) vector);
         }
 
-        List<Float> floatList = Arrays.stream(floatObjects).collect(Collectors.toList());
+        knnQuery.put("query_vector", vectorValues);
 
-        var knnQuery = new KnnQuery.Builder()
-                .field("vectorizedContent.predicted_values")
-                .queryVector(floatList)
-                .numCandidates(100)
-                .k(10)
-                .boost(10.0f)
-                .build();
+        Map<String, Object> requestPayload = new HashMap<>();
+        requestPayload.put("knn", knnQuery);
 
-        *//*var searchQuery = NativeQuery.builder()
-                .withQuery(knnQuery._toQuery())
-                .withMaxResults(5)
-                .withSearchType(null)
-                .build();*//*
+        //Serialize the request payload as JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-        var searchQuery = NativeQuery.builder()
-                .withKnnQuery(knnQuery)
-                .withMaxResults(5)
-                .withSearchType(null) // obavezno treba imati
-                .build();
+        ObjectWriter objectWriter = objectMapper.writer();
+        String payloadJSON = objectWriter.writeValueAsString(requestPayload);
 
-        SearchHits<SecurityIncidentIndex> searchHits = elasticsearchOperations.search(searchQuery, SecurityIncidentIndex.class);
+        Request request = new Request("POST", endpoint);
+        request.setJsonEntity(payloadJSON);
 
-        return searchHits.getSearchHits().stream()
-                .map(SearchHit::getContent)
-                .collect(Collectors.toList());*/
-        return null;
+        Response response = restClient.performRequest(request);
+
+        //get hits
+        List<JsonNode> sources = extractSources(response);
+
+        List<SecurityIncidentIndex> securityIncidents = new ArrayList<>();
+        for (JsonNode source : sources) {
+            JsonNode parentVectorNode = source.get("vectorizedContent");
+            JsonNode vectorNode = parentVectorNode.get("predicted_value");
+
+            float[] vectorArray = new float[vectorNode.size()];
+            for (int i = 0; i < vectorNode.size(); i++) {
+                vectorArray[i] = vectorNode.get(i).floatValue();
+            }
+
+            VectorizedContent vectorizedContent = new VectorizedContent();
+            vectorizedContent.setPredicted_value(vectorArray);
+
+            SecurityIncidentIndex incident = new SecurityIncidentIndex(
+                    source.get("full_name").asText(),
+                    source.get("security_organization_name").asText(),
+                    source.get("attacked_organization_name").asText(),
+                    source.get("incident_severity").asText(),
+                    source.get("database_id").asInt(),
+                    new GeoPoint(source.get("lat").asDouble(), source.get("lon").asDouble()),
+                    vectorizedContent
+            );
+
+            securityIncidents.add(incident);
+        }
+
+        return securityIncidents;
+    }
+
+    public List<JsonNode> extractSources(Response response) throws Exception {
+        List<JsonNode> list = new ArrayList<>();
+
+        // Convert response entity to String
+        String responseBody = EntityUtils.toString(response.getEntity());
+
+        // Parse JSON
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(responseBody);
+
+        // Navigate to hits array
+        JsonNode hits = root.path("hits").path("hits");
+
+        // Iterate over hits and collect _source
+        if (hits.isArray()) {
+            for (JsonNode hit : hits) {
+                JsonNode source = hit.path("_source");
+                if (!source.isMissingNode()) {
+                    list.add(source);
+                }
+            }
+        }
+
+        return list;
     }
 }
