@@ -1,11 +1,14 @@
 package com.example.udd.controller;
 
+import com.example.udd.dto.SearchQueryDto;
 import com.example.udd.dto.SecurityIncidentDto;
 import com.example.udd.model.SecurityIncident;
 import com.example.udd.modelIndex.SecurityIncidentIndex;
+import com.example.udd.service.SearchService;
 import com.example.udd.service.SecurityIncidentService;
 import com.example.udd.utils.MinIOUtils;
 import com.example.udd.utils.PDFExtractor;
+import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -14,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +26,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/securityIncident")
 public class SecurityIncidentController {
+    private final PDFExtractor pdfExtractor = PDFExtractor.getInstance();
+
     @Autowired
     private SecurityIncidentService securityIncidentService;
-    private final PDFExtractor pdfExtractor = PDFExtractor.getInstance();
+    @Autowired
+    private SearchService searchService;
     @Autowired
     private MinIOUtils minIOUtils;
 
@@ -62,13 +69,13 @@ public class SecurityIncidentController {
         }
     }
 
-    @GetMapping("/search/{input}/{searchType}")
+    @PostMapping("/search/{searchType}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<?> search(@PathVariable String input, @PathVariable String searchType){
-        List<SecurityIncidentIndex> securityIncidentIndices = securityIncidentService.search(input, searchType);
+    public ResponseEntity<?> search(@RequestBody SearchQueryDto searchQueryDto, @PathVariable String searchType){
+        List<SecurityIncidentIndex> records = searchService.search(searchQueryDto.keywords() ,searchType);
 
-        if(securityIncidentIndices != null){
-            return ResponseEntity.ok(securityIncidentIndices);
+        if(records != null){
+            return ResponseEntity.ok(records);
         } else {
             return ResponseEntity.internalServerError().build();
         }

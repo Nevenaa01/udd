@@ -6,6 +6,7 @@ import com.example.udd.model.SecurityIncident;
 import com.example.udd.modelIndex.SecurityIncidentIndex;
 import com.example.udd.repository.SecurityIncidentRepository;
 import com.example.udd.repositoryIndex.SecurityIncidentIndexRepository;
+import com.example.udd.utils.VectorizationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -33,13 +34,6 @@ public class SecurityIncidentService {
     private SecurityIncidentIndexRepository securityIncidentIndexRepository;
     @Autowired
     private SecurityIncidentRepository securityIncidentRepository;
-
-    private final ElasticsearchOperations elasticsearchOperations;
-
-    @Autowired
-    public SecurityIncidentService(ElasticsearchOperations elasticsearchOperations) {
-        this.elasticsearchOperations = elasticsearchOperations;
-    }
 
     public Iterable<SecurityIncidentIndex> getAll() {
         /*Page<SecurityIncident> page = securityIncidentRepository.findAll(PageRequest.of(0, 10));
@@ -121,31 +115,5 @@ public class SecurityIncidentService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public List<SecurityIncidentIndex> search(String input, String tpyeOfSearch){
-        Criteria criteria;
-
-        switch (tpyeOfSearch){
-            case "fullNameAndSeverity":
-                criteria = new Criteria("full_name").contains(input.toLowerCase())
-                        .or(new Criteria("incident_severity").contains(input.toUpperCase()));
-
-                break;
-            case "organizationsName":
-                criteria = new Criteria("security_organization_name").contains(input.toLowerCase())
-                        .or(new Criteria("attacked_organization_name").contains(input.toLowerCase()));
-                break;
-
-            default:
-                return null;
-        }
-
-        Query query = new CriteriaQuery(criteria);
-        return elasticsearchOperations
-                .search(query, SecurityIncidentIndex.class)
-                .stream()
-                .map(hit -> hit.getContent())
-                .collect(Collectors.toList());
     }
 }
