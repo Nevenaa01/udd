@@ -5,6 +5,7 @@ services:
     restart: always
     volumes:
       - elastic_data:/usr/share/elasticsearch/data
+      - ./serbianStopwords.txt:/usr/share/elasticsearch/config/serbianStopwords.txt
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g

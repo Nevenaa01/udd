@@ -13,11 +13,11 @@ public class SecurityIncidentIndex {
     @Id
     private String id;
 
-    @Field(type = FieldType.Text, store = true, name = "full_name")
+    @Field(type = FieldType.Text, store = true, name = "full_name", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String fullName;
-    @Field(type = FieldType.Text, store = true, name = "security_organization_name")
+    @Field(type = FieldType.Text, store = true, name = "security_organization_name", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String securityOrganizationName;
-    @Field(type = FieldType.Text, store = true, name = "attacked_organization_name")
+    @Field(type = FieldType.Text, store = true, name = "attacked_organization_name", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String attackedOrganizationName;
     @Field(type = FieldType.Keyword, store = true, name = "incident_severity")
     private String incidentSeverity;
@@ -27,7 +27,7 @@ public class SecurityIncidentIndex {
     private GeoPoint location;
     @Field(type = FieldType.Object)
     private VectorizedContent vectorizedContent;
-    @Field(type = FieldType.Text, store = true, name = "pdf_content")
+    @Field(type = FieldType.Text, store = true, name = "pdf_content", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String pdfContent;
 
     public SecurityIncidentIndex() {

@@ -8,7 +8,7 @@
           "lowercase",
           "icu_folding",
           "serbian_cyrillic_to_latinic",
-          "stop",
+          "serbian_stop",
           "serbian_stemmer"
         ]
       }
@@ -21,6 +21,10 @@
       "serbian_stemmer": {
         "type": "stemmer",
         "language": "serbian"
+      },
+      "serbian_stop": {
+        "type": "stop",
+        "stopwords_path": "serbianStopwords.txt"
       }
     }
   }
