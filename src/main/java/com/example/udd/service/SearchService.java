@@ -101,6 +101,8 @@ public class SearchService implements ISearchService {
                             return b;
                         })
                 ))._toQuery();
+            case "fullTextPDF":
+
             default:
                 return null;
         }
@@ -125,7 +127,7 @@ public class SearchService implements ISearchService {
 
         Map<String, Object> knnQuery = new HashMap<>();
         knnQuery.put("field", "vectorizedContent.predicted_value");
-        knnQuery.put("k", 10);
+        knnQuery.put("k", 5);
         knnQuery.put("num_candidates", 10);
 
         List<Double> vectorValues = new ArrayList<>();
@@ -173,7 +175,8 @@ public class SearchService implements ISearchService {
                     source.get("incident_severity").asText(),
                     source.get("database_id").asInt(),
                     new GeoPoint(source.get("lat").asDouble(), source.get("lon").asDouble()),
-                    vectorizedContent
+                    vectorizedContent,
+                    source.get("pdf_content").asText()
             );
 
             securityIncidents.add(incident);

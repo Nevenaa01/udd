@@ -10,13 +10,15 @@ public class SecurityIncidentDto {
     public String attackedOrganizationName;
     public IncidentSeverity incidentSeverity;
     public String address;
+    public String pdfContent;
 
-    public SecurityIncidentDto(String fileName, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String address) {
+    public SecurityIncidentDto(String fileName, String fullName, String securityOrganizationName, String attackedOrganizationName, IncidentSeverity incidentSeverity, String address, String pdfContent) {
         this.fileName = fileName;
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
         this.incidentSeverity = incidentSeverity;
         this.address = address;
+        this.pdfContent = pdfContent;
     }
 }

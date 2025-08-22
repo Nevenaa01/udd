@@ -1,8 +1,6 @@
 package com.example.udd.modelIndex;
 
-import com.example.udd.model.IncidentSeverity;
 import jakarta.persistence.Id;
-import lombok.*;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -29,6 +27,8 @@ public class SecurityIncidentIndex {
     private GeoPoint location;
     @Field(type = FieldType.Object)
     private VectorizedContent vectorizedContent;
+    @Field(type = FieldType.Text, store = true, name = "pdf_content")
+    private String pdfContent;
 
     public SecurityIncidentIndex() {
     }
@@ -44,7 +44,7 @@ public class SecurityIncidentIndex {
         this.vectorizedContent = vectorizedContent;
     }
 
-    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, GeoPoint location, VectorizedContent vectorizedContent) {
+    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, GeoPoint location, VectorizedContent vectorizedContent, String pdfContent) {
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
@@ -52,6 +52,7 @@ public class SecurityIncidentIndex {
         this.databaseId = databaseId;
         this.location = location;
         this.vectorizedContent = vectorizedContent;
+        this.pdfContent = pdfContent;
     }
 
     public String getId() {
@@ -116,5 +117,13 @@ public class SecurityIncidentIndex {
 
     public void setVectorizedContent(VectorizedContent vectorizedContent) {
         this.vectorizedContent = vectorizedContent;
+    }
+
+    public String getPdfContent() {
+        return pdfContent;
+    }
+
+    public void setPdfContent(String pdfContent) {
+        this.pdfContent = pdfContent;
     }
 }

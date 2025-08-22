@@ -48,19 +48,22 @@ public class SecurityIncidentService {
         int incidentSeverityStartIndex = pdfDocument.indexOf("Incident severity: ");
         int addressStartIndex = pdfDocument.indexOf("Address: ");
         int endSquareBracketsIndex = pdfDocument.lastIndexOf("]]");
+        int contentStartIndex = pdfDocument.indexOf("Content:");
 
         String fullName = pdfDocument.substring(fullNameIndex + 11, SONameStartIndex - 3);
         String securityOrganizationName = pdfDocument.substring(SONameStartIndex + 28, AONameStartIndex - 3);
         String attackedOrganizationName = pdfDocument.substring(AONameStartIndex + 28, incidentSeverityStartIndex - 3);
         IncidentSeverity incidentSeverity = stringToIncidentSeverity(pdfDocument.substring(incidentSeverityStartIndex + 19, addressStartIndex - 3));
         String address = pdfDocument.substring(addressStartIndex + 9, endSquareBracketsIndex - 1);
+        String content = pdfDocument.substring(contentStartIndex + 9, pdfDocument.length() - 3).replace("\n", "").replace("\r", "");
 
         return new SecurityIncidentDto(fileName,
                 fullName,
                 securityOrganizationName,
                 attackedOrganizationName,
                 incidentSeverity,
-                address);
+                address,
+                content);
     }
 
     private IncidentSeverity stringToIncidentSeverity(String incidentSeverity){
@@ -83,24 +86,26 @@ public class SecurityIncidentService {
 
         SecurityIncident savedIncident = securityIncidentRepository.save(securityIncident);
 
+        securityIncidentDto.id = savedIncident.getId();
         // Log to file
-        logToFile(savedIncident);
+        logToFile(securityIncidentDto);
 
         return savedIncident;
     }
 
-    private void logToFile(SecurityIncident securityIncident){
+    private void logToFile(SecurityIncidentDto securityIncident){
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %f,%f, id in database: %d",
-                securityIncident.getAttackedOrganizationName(),
-                securityIncident.getSecurityOrganizationName(),
-                securityIncident.getFullName(),
-                securityIncident.getIncidentSeverity().toString(),
+        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %f,%f, id in database: %d, pdfContent: %s",
+                securityIncident.attackedOrganizationName,
+                securityIncident.securityOrganizationName,
+                securityIncident.fullName,
+                securityIncident.incidentSeverity.toString(),
                 45.2671,
                 19.8335,
                 //securityIncident.getLocation(),
-                securityIncident.getId());
+                securityIncident.id,
+                securityIncident.pdfContent);
 
         try {
             String projectRoot = System.getProperty("user.dir");

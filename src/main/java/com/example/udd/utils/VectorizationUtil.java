@@ -23,7 +23,7 @@ import java.io.IOException;
 
 @Component
 public class VectorizationUtil {
-    private static final String DJL_MODEL = "sentence-transformers/all-mpnet-base-v2";
+    private static final String DJL_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
 
     private static final String DJL_PATH = "djl://ai.djl.huggingface.pytorch/" + DJL_MODEL;
 
