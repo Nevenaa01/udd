@@ -102,7 +102,17 @@ public class SearchService implements ISearchService {
                         })
                 ))._toQuery();
             case "fullTextPDF":
-
+                return BoolQuery.of(q -> q.should(mb -> mb.bool(b -> {
+                        tokens.forEach(token -> {
+                            b.should(sb -> sb.match(m -> m.field("full_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
+                            b.should(sb -> sb.term(m -> m.field("incident_severity").value(token.toUpperCase())));
+                            b.should(sb -> sb.match(m -> m.field("security_organization_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
+                            b.should(sb -> sb.match(m -> m.field("attacked_organization_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
+                            b.should(sb -> sb.match(m -> m.field("pdf_content").fuzziness(Fuzziness.AUTO.asString()).query(token)));
+                        });
+                        return b;
+                    })
+                ))._toQuery();
             default:
                 return null;
         }
