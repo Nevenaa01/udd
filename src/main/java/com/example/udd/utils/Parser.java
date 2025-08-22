@@ -65,7 +65,18 @@ public class Parser {
             return expr;
         } else { // term
             String[] parts = token.split(":", 2);
-            return new TermNode(parts[0], parts[1].replaceAll("^\"|\"$", ""));
+            String rawValue;
+            if(parts.length == 2) {
+                //structured
+                rawValue = parts[1];
+            } else{
+                //not structured
+                rawValue = parts[0];
+            }
+
+            boolean isPhrase = rawValue.startsWith("\"") && rawValue.endsWith("\"");
+            String cleanValue = rawValue.replaceAll("\"", ""); // remove quotes
+            return new TermNode(parts.length == 2 ? parts[0] : null, cleanValue, isPhrase);
         }
     }
 }

@@ -4,6 +4,7 @@ import ai.djl.translate.TranslateException;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import com.example.udd.exceptionHandling.exception.MalformedQueryException;
 import com.example.udd.modelIndex.*;
 import com.example.udd.modelIndex.AST.Node;
@@ -49,7 +50,7 @@ public class SearchService implements ISearchService {
     private RestClient restClient;
 
     private static final Pattern TOKEN_PATTERN = Pattern.compile(
-            "\\(|\\)|AND|OR|NOT|\\w+:\"[^\"]+\"|\\w+:[^\\s()]+"
+            "\\(|\\)|AND|OR|NOT|\\w+:\"[^\"]+\"|\\w+:[^\\s()]+|\"[^\"]+\"|[^\\s()]+"
     );
 
     public SearchService(ElasticsearchOperations elasticsearchOperations){
@@ -237,11 +238,45 @@ public class SearchService implements ISearchService {
 
     private Query buildQueryFromNode(Node node) {
         if (node instanceof TermNode term) {
-            return Query.of(q -> q.match(m -> m
-                    .field(term.field)
-                    .query(term.value)
-                    .fuzziness(Fuzziness.ONE.asString())
-            ));
+            if (term.isPhrase) {
+                if(term.field != null) {
+                    return Query.of(q -> q.matchPhrase(m -> m
+                            .field(term.field)
+                            .query(term.value)
+                    ));
+                }
+                else{
+                    return Query.of(q -> q.multiMatch(m -> m
+                            .fields("full_name",
+                                    "security_organization_name",
+                                    "attacked_organization_name",
+                                    "incident_severity",
+                                    "pdf_content"
+                            )
+                            .query(term.value)
+                            .type(TextQueryType.Phrase)
+                    ));
+                }
+            } else {
+                if(term.field != null) {
+                    return Query.of(q -> q.match(m -> m
+                            .field(term.field)
+                            .query(term.value)
+                            .fuzziness(Fuzziness.ONE.asString())
+                    ));
+                } else{
+                    return Query.of(q -> q.multiMatch(m -> m
+                            .fields("full_name",
+                                    "security_organization_name",
+                                    "attacked_organization_name",
+                                    "incident_severity",
+                                    "pdf_content"
+                            )
+                            .query(term.value)
+                            .fuzziness(Fuzziness.ONE.asString())
+                    ));
+                }
+            }
         } else if (node instanceof OperatorNode op) {
             return Query.of(q -> q.bool(b -> {
                 for (Node child : op.children) {
