@@ -1,15 +1,16 @@
 package com.example.udd.service;
 
 import ai.djl.translate.TranslateException;
-import co.elastic.clients.elasticsearch._types.KnnQuery;
-import co.elastic.clients.elasticsearch._types.KnnSearch;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.KnnQuery;
 
-import com.example.udd.modelIndex.SecurityIncidentIndex;
-import com.example.udd.modelIndex.VectorizedContent;
+import com.example.udd.exceptionHandling.exception.MalformedQueryException;
+import com.example.udd.modelIndex.*;
+import com.example.udd.modelIndex.AST.Node;
+import com.example.udd.modelIndex.AST.OperatorNode;
+import com.example.udd.modelIndex.AST.TermNode;
 import com.example.udd.service.interfaces.ISearchService;
+import com.example.udd.utils.Parser;
 import com.example.udd.utils.TextVectorization;
 import com.example.udd.utils.VectorizationUtil;
 import joptsimple.internal.Strings;
@@ -29,16 +30,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
-import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +47,10 @@ public class SearchService implements ISearchService {
     private final ElasticsearchOperations elasticsearchOperations;
     @Autowired
     private RestClient restClient;
+
+    private static final Pattern TOKEN_PATTERN = Pattern.compile(
+            "\\(|\\)|AND|OR|NOT|\\w+:\"[^\"]+\"|\\w+:[^\\s()]+"
+    );
 
     public SearchService(ElasticsearchOperations elasticsearchOperations){
         this.elasticsearchOperations = elasticsearchOperations;
@@ -113,6 +117,16 @@ public class SearchService implements ISearchService {
                         return b;
                     })
                 ))._toQuery();
+            case "combinedBooleanSemiStructured":
+                //one full expression has 2 operands and an operator
+                if(tokens.size() < 3){
+                    throw new MalformedQueryException("Search query malformed");
+                }
+
+                List<String> boolTokens = tokenize(Strings.join(tokens, " "));
+                Parser parser = new Parser(boolTokens);
+                Node ast = parser.parse(); //root node
+                return buildQueryFromNode(ast);
             default:
                 return null;
         }
@@ -219,5 +233,37 @@ public class SearchService implements ISearchService {
         }
 
         return list;
+    }
+
+    private Query buildQueryFromNode(Node node) {
+        if (node instanceof TermNode term) {
+            return Query.of(q -> q.match(m -> m
+                    .field(term.field)
+                    .query(term.value)
+                    .fuzziness(Fuzziness.ONE.asString())
+            ));
+        } else if (node instanceof OperatorNode op) {
+            return Query.of(q -> q.bool(b -> {
+                for (Node child : op.children) {
+                    Query childQuery = buildQueryFromNode(child); // recursively build
+                    switch (op.operator) {
+                        case "AND" -> b.must(childQuery);   // pass Query directly
+                        case "OR"  -> b.should(childQuery);
+                        case "NOT" -> b.mustNot(childQuery);
+                    }
+                }
+                return b;
+            }));
+        }
+        throw new IllegalStateException("Unknown node type");
+    }
+
+    public static List<String> tokenize(String input) {
+        List<String> tokens = new ArrayList<>();
+        Matcher matcher = TOKEN_PATTERN.matcher(input);
+        while (matcher.find()) {
+            tokens.add(matcher.group());
+        }
+        return tokens;
     }
 }
