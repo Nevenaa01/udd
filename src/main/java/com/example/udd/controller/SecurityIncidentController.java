@@ -72,7 +72,7 @@ public class SecurityIncidentController {
     @PostMapping("/search/{searchType}")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> search(@RequestBody SearchQueryDto searchQueryDto, @PathVariable String searchType){
-        List<SecurityIncidentIndex> records = searchService.search(searchQueryDto.keywords() ,searchType);
+        List<SecurityIncidentDto> records = searchService.search(searchQueryDto.keywords() ,searchType);
 
         if(records != null){
             return ResponseEntity.ok(records);

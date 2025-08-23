@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+import com.example.udd.dto.SecurityIncidentDto;
 import com.example.udd.exceptionHandling.exception.MalformedQueryException;
 import com.example.udd.modelIndex.*;
 import com.example.udd.modelIndex.AST.Node;
@@ -38,6 +39,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -62,7 +64,7 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public List<SecurityIncidentIndex> search(List<String> keywords, String typeOfSearch) {
+    public List<SecurityIncidentDto> search(List<String> keywords, String typeOfSearch) {
         if(typeOfSearch.equals("knn")){
             try {
                 TextVectorization vectorizer = new TextVectorization("localhost", 9200);
@@ -93,11 +95,17 @@ public class SearchService implements ISearchService {
         highlightFields.add(new HighlightField("full_name"));
         highlightFields.add(new HighlightField("security_organization_name"));
         highlightFields.add(new HighlightField("attacked_organization_name"));
+        highlightFields.add(new HighlightField("incident_severity"));
         highlightFields.add(new HighlightField("pdf_content"));
+
+        HighlightParameters params = HighlightParameters.builder()
+                .withPreTags("<em class=\"highlight\">")
+                .withPostTags("</em>")
+                .build();
 
         NativeQueryBuilder searchQueryBuilder = new NativeQueryBuilder()
                 .withQuery(buildSimpleSearchQuery(keywords, typeOfSearch))
-                .withHighlightQuery(new HighlightQuery(new Highlight(highlightFields), SecurityIncidentIndex.class)
+                .withHighlightQuery(new HighlightQuery(new Highlight(params, highlightFields), SecurityIncidentIndex.class)
                 );
 
         return runQuery(searchQueryBuilder.build());
@@ -135,29 +143,61 @@ public class SearchService implements ISearchService {
         }
     }
 
-    private List<SecurityIncidentIndex> runQuery(NativeQuery searchQuery) {
+    private List<SecurityIncidentDto> runQuery(NativeQuery searchQuery) {
         var searchHits = elasticsearchOperations.search(
                 searchQuery,
                 SecurityIncidentIndex.class,
                 IndexCoordinates.of("security_incident_index")
         );
 
-        var searchHitsPaged = SearchHitSupport.searchPageFor(searchHits, searchQuery.getPageable());
-        var resultPage = (Page<SecurityIncidentIndex>) SearchHitSupport.unwrapSearchHits(searchHitsPaged);
-
+        List<SecurityIncidentDto> result = new ArrayList<>();
         for(var hit : searchHits){
             SecurityIncidentIndex entity = hit.getContent();
+            SecurityIncidentDto dto = new SecurityIncidentDto(entity);
+
+            dto.databaseId = (long) entity.getDatabaseId();
+            dto.incidentSeverityString = dto.incidentSeverity.toString();
 
             var highlights = hit.getHighlightFields();
             if(highlights != null && !highlights.isEmpty()){
-
+                replaceValueForField(dto, highlights);
             }
+
+            result.add(dto);
         }
 
-        return resultPage.getContent();
+        return result;
     }
 
-    private List<SecurityIncidentIndex> knnSearch(float[] vectors) throws Exception {
+    private void replaceValueForField(SecurityIncidentDto dto, Map<String, List<String>> highlights){
+        for(var entry : highlights.entrySet()){
+            String value = "";
+            for(var valueEntry : entry.getValue()){
+                value += valueEntry;
+            }
+
+            switch (entry.getKey()){
+                case "fullName":
+                    dto.fullName = value;
+                    break;
+                case "securityOrganizationName":
+                    dto.securityOrganizationName = value;
+                    break;
+                case "attackedOrganizationName":
+                    dto.attackedOrganizationName = value;
+                    break;
+                case "pdfContent":
+                    dto.pdfContent = value;
+                    break;
+                case "incidentSeverity":
+                    dto.incidentSeverityString = value;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private List<SecurityIncidentDto> knnSearch(float[] vectors) throws Exception {
         String endpoint = "/security_incident_index/_search";
 
         Map<String, Object> knnQuery = new HashMap<>();
@@ -190,7 +230,7 @@ public class SearchService implements ISearchService {
         //get hits
         List<JsonNode> sources = extractSources(response);
 
-        List<SecurityIncidentIndex> securityIncidents = new ArrayList<>();
+        List<SecurityIncidentDto> securityIncidents = new ArrayList<>();
         for (JsonNode source : sources) {
             JsonNode parentVectorNode = source.get("vectorizedContent");
             JsonNode vectorNode = parentVectorNode.get("predicted_value");
@@ -214,7 +254,11 @@ public class SearchService implements ISearchService {
                     source.get("pdf_content").asText()
             );
 
-            securityIncidents.add(incident);
+            SecurityIncidentDto dto = new SecurityIncidentDto(incident);
+            dto.databaseId = (long) incident.getDatabaseId();
+            dto.incidentSeverityString = incident.getIncidentSeverity().toString();
+
+            securityIncidents.add(dto);
         }
 
         return securityIncidents;
