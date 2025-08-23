@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
 import com.example.udd.exceptionHandling.exception.MalformedQueryException;
 import com.example.udd.modelIndex.*;
 import com.example.udd.modelIndex.AST.Node;
@@ -34,6 +35,9 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -82,41 +86,39 @@ public class SearchService implements ISearchService {
             }
         }
 
-        NativeQueryBuilder searchQueryBuilder = new NativeQueryBuilder().withQuery(buildSimpleSearchQuery(keywords, typeOfSearch));
+        if(keywords.contains("OR") || keywords.contains("AND") || keywords.contains("NOT"))
+            typeOfSearch = "combinedBooleanSemiStructured";
+
+        List<HighlightField> highlightFields = new ArrayList<>();
+        highlightFields.add(new HighlightField("full_name"));
+        highlightFields.add(new HighlightField("security_organization_name"));
+        highlightFields.add(new HighlightField("attacked_organization_name"));
+        highlightFields.add(new HighlightField("pdf_content"));
+
+        NativeQueryBuilder searchQueryBuilder = new NativeQueryBuilder()
+                .withQuery(buildSimpleSearchQuery(keywords, typeOfSearch))
+                .withHighlightQuery(new HighlightQuery(new Highlight(highlightFields), SecurityIncidentIndex.class)
+                );
+
         return runQuery(searchQueryBuilder.build());
     }
 
     private Query buildSimpleSearchQuery(List<String> tokens, String typeOfSearch){
         switch(typeOfSearch){
-            case "fullNameAndSeverity":
+            case "simple":
                 return BoolQuery.of(q -> q.should(mb -> mb.bool(b -> {
                             tokens.forEach(token -> {
+                                //fullNameAndSeverity
                                 b.should(sb -> sb.match(m -> m.field("full_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
                                 b.should(sb -> sb.term(m -> m.field("incident_severity").value(token.toUpperCase())));
-                            });
-                            return b;
-                        })
-                ))._toQuery();
-            case "organizationsName":
-                return BoolQuery.of(q -> q.should(mb -> mb.bool(b -> {
-                            tokens.forEach(token -> {
+                                //organizationsName
                                 b.should(sb -> sb.match(m -> m.field("security_organization_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
                                 b.should(sb -> sb.match(m -> m.field("attacked_organization_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
+                                //pdf_content
+                                b.should(sb -> sb.match(m -> m.field("pdf_content").fuzziness(Fuzziness.AUTO.asString()).query(token)));
                             });
                             return b;
                         })
-                ))._toQuery();
-            case "fullTextPDF":
-                return BoolQuery.of(q -> q.should(mb -> mb.bool(b -> {
-                        tokens.forEach(token -> {
-                            b.should(sb -> sb.match(m -> m.field("full_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
-                            b.should(sb -> sb.term(m -> m.field("incident_severity").value(token.toUpperCase())));
-                            b.should(sb -> sb.match(m -> m.field("security_organization_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
-                            b.should(sb -> sb.match(m -> m.field("attacked_organization_name").fuzziness(Fuzziness.AUTO.asString()).query(token)));
-                            b.should(sb -> sb.match(m -> m.field("pdf_content").fuzziness(Fuzziness.AUTO.asString()).query(token)));
-                        });
-                        return b;
-                    })
                 ))._toQuery();
             case "combinedBooleanSemiStructured":
                 //one full expression has 2 operands and an operator
@@ -134,7 +136,6 @@ public class SearchService implements ISearchService {
     }
 
     private List<SecurityIncidentIndex> runQuery(NativeQuery searchQuery) {
-
         var searchHits = elasticsearchOperations.search(
                 searchQuery,
                 SecurityIncidentIndex.class,
@@ -143,6 +144,15 @@ public class SearchService implements ISearchService {
 
         var searchHitsPaged = SearchHitSupport.searchPageFor(searchHits, searchQuery.getPageable());
         var resultPage = (Page<SecurityIncidentIndex>) SearchHitSupport.unwrapSearchHits(searchHitsPaged);
+
+        for(var hit : searchHits){
+            SecurityIncidentIndex entity = hit.getContent();
+
+            var highlights = hit.getHighlightFields();
+            if(highlights != null && !highlights.isEmpty()){
+
+            }
+        }
 
         return resultPage.getContent();
     }
