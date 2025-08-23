@@ -1,10 +1,7 @@
 package com.example.udd.modelIndex;
 
 import jakarta.persistence.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 @Document(indexName = "security_incident_index")
@@ -23,8 +20,8 @@ public class SecurityIncidentIndex {
     private String incidentSeverity;
     @Field(type = FieldType.Integer, store = true, name = "database_id")
     private Integer databaseId;
-    @Field(store = true, name = "location")
-    private GeoPoint location;
+    @GeoPointField
+    private String location;
     @Field(type = FieldType.Object)
     private VectorizedContent vectorizedContent;
     @Field(type = FieldType.Text, store = true, name = "pdf_content", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
@@ -33,7 +30,7 @@ public class SecurityIncidentIndex {
     public SecurityIncidentIndex() {
     }
 
-    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, GeoPoint location, VectorizedContent vectorizedContent) {
+    public SecurityIncidentIndex(String id, String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, String location, VectorizedContent vectorizedContent) {
         this.id = id;
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
@@ -44,7 +41,7 @@ public class SecurityIncidentIndex {
         this.vectorizedContent = vectorizedContent;
     }
 
-    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, GeoPoint location, VectorizedContent vectorizedContent, String pdfContent) {
+    public SecurityIncidentIndex(String fullName, String securityOrganizationName, String attackedOrganizationName, String incidentSeverity, Integer databaseId, String location, VectorizedContent vectorizedContent, String pdfContent) {
         this.fullName = fullName;
         this.securityOrganizationName = securityOrganizationName;
         this.attackedOrganizationName = attackedOrganizationName;
@@ -103,11 +100,11 @@ public class SecurityIncidentIndex {
         this.databaseId = databaseId;
     }
 
-    public GeoPoint getLocation() {
+    public String getLocation() {
         return location;
     }
 
-    public void setLocation(GeoPoint location) {
+    public void setLocation(String location) {
         this.location = location;
     }
 

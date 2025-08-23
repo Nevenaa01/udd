@@ -6,9 +6,11 @@ import com.example.udd.model.SecurityIncident;
 import com.example.udd.modelIndex.SecurityIncidentIndex;
 import com.example.udd.repository.SecurityIncidentRepository;
 import com.example.udd.repositoryIndex.SecurityIncidentIndexRepository;
+import com.example.udd.utils.GeoPointCalculator;
 import com.example.udd.utils.VectorizationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -54,7 +56,7 @@ public class SecurityIncidentService {
         String securityOrganizationName = pdfDocument.substring(SONameStartIndex + 28, AONameStartIndex - 3);
         String attackedOrganizationName = pdfDocument.substring(AONameStartIndex + 28, incidentSeverityStartIndex - 3);
         IncidentSeverity incidentSeverity = stringToIncidentSeverity(pdfDocument.substring(incidentSeverityStartIndex + 19, addressStartIndex - 3));
-        String address = pdfDocument.substring(addressStartIndex + 9, endSquareBracketsIndex - 1);
+        String address = pdfDocument.substring(addressStartIndex + 9, endSquareBracketsIndex);
         String content = pdfDocument.substring(contentStartIndex + 9, pdfDocument.length() - 3).replace("\n", "").replace("\r", "");
 
         return new SecurityIncidentDto(fileName,
@@ -94,6 +96,14 @@ public class SecurityIncidentService {
     }
 
     private void logToFile(SecurityIncidentDto securityIncident){
+        //get geoPoints from address
+        GeoPoint addressGeoPoint = new GeoPoint(0.0, 0.0);
+        try {
+            addressGeoPoint = GeoPointCalculator.Calculate(securityIncident.address);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
         String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %f,%f, id in database: %d, pdfContent: %s",
@@ -101,9 +111,8 @@ public class SecurityIncidentService {
                 securityIncident.securityOrganizationName,
                 securityIncident.fullName,
                 securityIncident.incidentSeverity.toString(),
-                45.2671,
-                19.8335,
-                //securityIncident.getLocation(),
+                addressGeoPoint.getLat(),
+                addressGeoPoint.getLon(),
                 securityIncident.id,
                 securityIncident.pdfContent);
 

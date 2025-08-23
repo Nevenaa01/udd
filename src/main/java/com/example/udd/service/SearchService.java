@@ -1,11 +1,11 @@
 package com.example.udd.service;
 
 import ai.djl.translate.TranslateException;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.example.udd.dto.SecurityIncidentDto;
 import com.example.udd.exceptionHandling.exception.MalformedQueryException;
 import com.example.udd.modelIndex.*;
@@ -13,6 +13,7 @@ import com.example.udd.modelIndex.AST.Node;
 import com.example.udd.modelIndex.AST.OperatorNode;
 import com.example.udd.modelIndex.AST.TermNode;
 import com.example.udd.service.interfaces.ISearchService;
+import com.example.udd.utils.GeoPointCalculator;
 import com.example.udd.utils.Parser;
 import com.example.udd.utils.TextVectorization;
 import com.example.udd.utils.VectorizationUtil;
@@ -23,7 +24,11 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.index.query.GeoShapeQueryBuilder;
+import org.locationtech.jts.geom.MultiPoint;
+import org.locationtech.spatial4j.shape.ShapeFactory;
 import org.nd4j.shade.jackson.databind.JsonNode;
 import org.nd4j.shade.jackson.databind.ObjectMapper;
 import org.nd4j.shade.jackson.databind.ObjectWriter;
@@ -33,19 +38,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
+import org.springframework.data.geo.Point;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.elasticsearch.index.query.QueryBuilders.geoShapeQuery;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +96,10 @@ public class SearchService implements ISearchService {
             }catch (Exception e){
                 e.printStackTrace();
             }
+        }
+
+        if(typeOfSearch.equals("geoSearch")){
+            return geoSearch(keywords);
         }
 
         if(keywords.contains("OR") || keywords.contains("AND") || keywords.contains("NOT"))
@@ -157,6 +171,12 @@ public class SearchService implements ISearchService {
 
             dto.databaseId = (long) entity.getDatabaseId();
             dto.incidentSeverityString = dto.incidentSeverity.toString();
+            try {
+                String[] location = entity.getLocation().split(",");
+                dto.address = GeoPointCalculator.GetAddresFromGeoPoint(new GeoPoint(Double.parseDouble(location[0]), Double.parseDouble(location[1])));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
 
             var highlights = hit.getHighlightFields();
             if(highlights != null && !highlights.isEmpty()){
@@ -242,6 +262,7 @@ public class SearchService implements ISearchService {
 
             VectorizedContent vectorizedContent = new VectorizedContent();
             vectorizedContent.setPredicted_value(vectorArray);
+            String location = source.get("lat").asDouble() + "," + source.get("lon").asDouble();
 
             SecurityIncidentIndex incident = new SecurityIncidentIndex(
                     source.get("full_name").asText(),
@@ -249,7 +270,7 @@ public class SearchService implements ISearchService {
                     source.get("attacked_organization_name").asText(),
                     source.get("incident_severity").asText(),
                     source.get("database_id").asInt(),
-                    new GeoPoint(source.get("lat").asDouble(), source.get("lon").asDouble()),
+                    location,
                     vectorizedContent,
                     source.get("pdf_content").asText()
             );
@@ -257,6 +278,7 @@ public class SearchService implements ISearchService {
             SecurityIncidentDto dto = new SecurityIncidentDto(incident);
             dto.databaseId = (long) incident.getDatabaseId();
             dto.incidentSeverityString = incident.getIncidentSeverity().toString();
+            dto.address = GeoPointCalculator.GetAddresFromGeoPoint(new GeoPoint(source.get("lat").asDouble(), source.get("lon").asDouble()));
 
             securityIncidents.add(dto);
         }
@@ -354,5 +376,44 @@ public class SearchService implements ISearchService {
             tokens.add(matcher.group());
         }
         return tokens;
+    }
+
+    public List<SecurityIncidentDto> geoSearch(List<String> keywords){
+        String location = Strings.join(keywords, " ");
+        try {
+            GeoPoint geoPoint = GeoPointCalculator.Calculate(location);
+
+            Query geoQuery = GeoDistanceQuery.of(g -> g
+                    .field("location")
+                    .location(l -> l.text(geoPoint.getLat() + "," + geoPoint.getLon()))
+                    .distance("500m")
+            )._toQuery();
+
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(geoQuery)
+                    .build();
+
+            SearchHits<SecurityIncidentIndex> searchHits = elasticsearchOperations.search(query, SecurityIncidentIndex.class);
+
+            List<SecurityIncidentDto> dtos = new ArrayList<>();
+            for (SearchHit<SecurityIncidentIndex> hit : searchHits) {
+                SecurityIncidentIndex incident = hit.getContent();
+                SecurityIncidentDto dto = new SecurityIncidentDto(incident);
+
+                String[] latLon = incident.getLocation().split(",");
+
+                dto.databaseId = (long) incident.getDatabaseId();
+                dto.incidentSeverityString = incident.getIncidentSeverity().toString();
+                dto.address = GeoPointCalculator.GetAddresFromGeoPoint(new GeoPoint(Double.parseDouble(latLon[0]), Double.parseDouble(latLon[1])));
+
+                dtos.add(dto);
+            }
+
+            return dtos;
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
