@@ -106,13 +106,15 @@ public class SecurityIncidentService {
 
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %f,%f, id in database: %d, pdfContent: %s",
+        String city = securityIncident.address.split(", ")[1];
+        String logMessage = String.format("Attacked Org: %s where Security Org: %s with Member of incident response team: %s and severity: %s, on location: %f,%f in city:%s, id in database: %d, pdfContent: %s",
                 securityIncident.attackedOrganizationName,
                 securityIncident.securityOrganizationName,
                 securityIncident.fullName,
                 securityIncident.incidentSeverity.toString(),
                 addressGeoPoint.getLat(),
                 addressGeoPoint.getLon(),
+                city,
                 securityIncident.id,
                 securityIncident.pdfContent);
 

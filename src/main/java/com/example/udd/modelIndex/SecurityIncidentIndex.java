@@ -10,11 +10,39 @@ public class SecurityIncidentIndex {
     @Id
     private String id;
 
-    @Field(type = FieldType.Text, store = true, name = "full_name", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
+    @MultiField(
+            mainField = @Field(
+                    name = "full_name",
+                    type = FieldType.Text,
+                    store = true,
+                    analyzer = "serbian_simple",
+                    searchAnalyzer = "serbian_simple"
+            ),
+            otherFields = {
+                    @InnerField(
+                            suffix = "keyword",
+                            type = FieldType.Keyword
+                    )
+            }
+    )
     private String fullName;
     @Field(type = FieldType.Text, store = true, name = "security_organization_name", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String securityOrganizationName;
-    @Field(type = FieldType.Text, store = true, name = "attacked_organization_name", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
+    @MultiField(
+            mainField = @Field(
+                    name = "attacked_organization_name",
+                    type = FieldType.Text,
+                    store = true,
+                    analyzer = "serbian_simple",
+                    searchAnalyzer = "serbian_simple"
+            ),
+            otherFields = {
+                    @InnerField(
+                            suffix = "keyword",
+                            type = FieldType.Keyword
+                    )
+            }
+    )
     private String attackedOrganizationName;
     @Field(type = FieldType.Keyword, store = true, name = "incident_severity")
     private String incidentSeverity;
@@ -22,6 +50,8 @@ public class SecurityIncidentIndex {
     private Integer databaseId;
     @GeoPointField
     private String location;
+    @Field(type = FieldType.Keyword, store = true)
+    private String city;
     @Field(type = FieldType.Object)
     private VectorizedContent vectorizedContent;
     @Field(type = FieldType.Text, store = true, name = "pdf_content", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
@@ -106,6 +136,14 @@ public class SecurityIncidentIndex {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public VectorizedContent getVectorizedContent() {
