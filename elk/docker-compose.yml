@@ -69,6 +69,9 @@ services:
       - ./minio_storage:/data
     command: server --console-address ":9001" /data
     env_file: .env
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password123
     networks:
       - elk
 

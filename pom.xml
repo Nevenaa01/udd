@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <spring-boot.run.fork>true</spring-boot.run.fork>
+        <spring-boot.run.jvmArguments>-Djdk.lang.Process.launchMechanism=v2</spring-boot.run.jvmArguments>
     </properties>
     <dependencies>
         <dependency>

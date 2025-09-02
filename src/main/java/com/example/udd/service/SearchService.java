@@ -58,7 +58,6 @@ import java.util.regex.Pattern;
 import static org.elasticsearch.index.query.QueryBuilders.geoShapeQuery;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SearchService implements ISearchService {
     private final ElasticsearchOperations elasticsearchOperations;
@@ -78,12 +77,6 @@ public class SearchService implements ISearchService {
         if(typeOfSearch.equals("knn")){
             try {
                 TextVectorization vectorizer = new TextVectorization("localhost", 9200);
-                List<Double> vector1 = vectorizer.vectorize(
-                        "sentence-transformers__all-mpnet-base-v2",
-                        "text_field",
-                        Strings.join(keywords, " ")
-                );
-                System.out.println("Vector1: " + vector1);
 
                 var vector = VectorizationUtil.getEmbedding(Strings.join(keywords, " "));
 
