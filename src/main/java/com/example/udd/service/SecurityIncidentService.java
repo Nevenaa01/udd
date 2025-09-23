@@ -132,4 +132,8 @@ public class SecurityIncidentService {
             e.printStackTrace();
         }
     }
+
+    public String findById(Long id){
+        return securityIncidentRepository.findById(id).get().getFileName();
+    }
 }

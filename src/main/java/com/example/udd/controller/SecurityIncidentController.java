@@ -75,6 +75,9 @@ public class SecurityIncidentController {
         List<SecurityIncidentDto> records = searchService.search(searchQueryDto.keywords() ,searchType);
 
         if(records != null){
+            for(var record : records){
+                record.fileName = securityIncidentService.findById(record.databaseId);
+            }
             return ResponseEntity.ok(records);
         } else {
             return ResponseEntity.internalServerError().build();
